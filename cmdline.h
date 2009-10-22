@@ -43,7 +43,7 @@ namespace cmdline{
 namespace detail{
 
 template <typename Target, typename Source, bool Same>
-class lexical_cast{
+class lexical_cast_t{
 public:
   static Target cast(const Source &arg){
     Target ret;
@@ -56,7 +56,7 @@ public:
 };
 
 template <typename Target, typename Source>
-class lexical_cast<Target, Source, true>{
+class lexical_cast_t<Target, Source, true>{
 public:
   static Target cast(const Source &arg){
     return arg;
@@ -64,7 +64,7 @@ public:
 };
 
 template <typename Source>
-class lexical_cast<std::string, Source, false>{
+class lexical_cast_t<std::string, Source, false>{
 public:
   static std::string cast(const Source &arg){
     std::ostringstream ss;
@@ -74,7 +74,7 @@ public:
 };
 
 template <typename Target>
-class lexical_cast<Target, std::string, false>{
+class lexical_cast_t<Target, std::string, false>{
 public:
   static Target cast(const std::string &arg){
     Target ret;
@@ -95,13 +95,19 @@ struct is_same<T, T>{
   static const bool value = true;
 };
 
-} // detail
-
 template<typename Target, typename Source>
 Target lexical_cast(const Source &arg)
 {
-  return detail::lexical_cast<Target, Source, detail::is_same<Target, Source>::value>::cast(arg);
+  return lexical_cast_t<Target, Source, detail::is_same<Target, Source>::value>::cast(arg);
 }
+
+
+template <class T>
+struct lexical_caster{
+  T operator()(const std::string &str){
+    return lexical_cast<T>(str);
+  }
+};
 
 static inline std::string demangle(const std::string &name)
 {
@@ -124,6 +130,8 @@ std::string readable_typename<std::string>()
   return "string";
 }
 
+} // detail
+
 //-----
 
 class cmdline_error : public std::exception {
@@ -134,6 +142,24 @@ public:
 private:
   std::string msg;
 };
+
+template <class T>
+struct range_reader{
+  range_reader(const T &low, const T &high): low(low), high(high) {}
+  T operator()(const std::string &s){
+    T ret=cmdline::detail::lexical_cast<T>(s);
+    if (!(ret>=low && ret<=high)) throw cmdline::cmdline_error("range_error");
+    return ret;
+  }
+private:
+  T low, high;
+};
+
+template <class T>
+range_reader<T> range(const T &low, const T &high)
+{
+  return range_reader<T>(low, high);
+}
 
 class parser{
 public:
@@ -159,8 +185,21 @@ public:
 	   const std::string &desc="",
 	   bool need=true,
 	   const T def=T()){
+    typedef detail::lexical_caster<T> F;
     if (options.count(name)) throw cmdline_error("multiple definition: "+name);
-    options[name]=new option_with_value<T>(name, short_name, need, def, desc);
+    options[name]=new option_with_value_with_reader<T, F>(name, short_name, need, def, desc, F());
+    ordered.push_back(options[name]);
+  }
+
+  template <class T, class F>
+  void add(const std::string &name,
+	   char short_name=0,
+	   const std::string &desc="",
+	   bool need=true,
+	   const T def=T(),
+	   F reader=F()){
+    if (options.count(name)) throw cmdline_error("multiple definition: "+name);
+    options[name]=new option_with_value_with_reader<T, F>(name, short_name, need, def, desc, reader);
     ordered.push_back(options[name]);
   }
 
@@ -320,7 +359,7 @@ private:
       return;
     }
     if (!options[name]->set(value)){
-      errors.push_back("option does not have value: --"+name+"="+value);
+      errors.push_back("option value is invalid: --"+name+"="+value);
       return;
     }
   }
@@ -393,9 +432,10 @@ private:
     option_with_value(const std::string &name,
 		      char short_name,
 		      bool need,
-		      const T def=T(),
-		      const std::string &desc="")
-      :nam(name), snam(short_name), need(need), has(false), def(def), actual(def){
+		      const T &def,
+		      const std::string &desc)
+      : nam(name), snam(short_name), need(need), has(false)
+      , def(def), actual(def) {
       this->desc=full_description(desc);
     }
     ~option_with_value(){}
@@ -412,7 +452,7 @@ private:
 
     bool set(const std::string &value){
       try{
-	actual=lexical_cast<T>(value);
+	actual=read(value);
 	has=true;
       }
       catch(const std::exception &e){
@@ -442,13 +482,15 @@ private:
       return desc;
     }
 
-  private:
+  protected:
     std::string full_description(const std::string &desc){
       return
-	desc+"("+readable_typename<T>()+
-	(need?"":"[="+lexical_cast<std::string>(def)+"]")
+	desc+"("+detail::readable_typename<T>()+
+	(need?"":"[="+detail::lexical_cast<std::string>(def)+"]")
 	+")";
     }
+
+    virtual T read(const std::string &s)=0;
 
     std::string nam;
     char snam;
@@ -458,6 +500,26 @@ private:
     bool has;
     T def;
     T actual;
+  };
+
+  template <class T, class F>
+  class option_with_value_with_reader : public option_with_value<T> {
+  public:
+    option_with_value_with_reader(const std::string &name,
+				  char short_name,
+				  bool need,
+				  const T def,
+				  const std::string &desc,
+				  F reader)
+      : option_with_value<T>(name, short_name, need, def, desc), reader(reader){
+    }
+
+  private:
+    T read(const std::string &s){
+      return reader(s);
+    }
+
+    F reader;
   };
 
   std::map<std::string, option_base*> options;

@@ -6,8 +6,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   cmdline::parser a;
-  a.add<string>("host", 'h', "ホスト名", true);
-  a.add<int>("port", 'p', "ポート番号", false, 80);
+  a.add<string>("host", 'h', "ホスト名", true, "");
+  a.add<int>("port", 'p', "ポート番号", false, 80, cmdline::range(1, 65535));
   a.add("help", 0, "ヘルプを表示します");
   a.footer("ファイル名 ...");
 
