@@ -35,21 +35,20 @@ int main(int argc, char *argv[])
   cmdline::parser a;
   a.add<string>("host", 'h', "ホスト名", true, "");
   a.add<int>("port", 'p', "ポート番号", false, 80, cmdline::range(1, 65535));
+  a.add<string>("type", 't', "種類", false, "http", cmdline::oneof<string>("http", "https", "ssh", "ftp"));
   a.add("help", 0, "ヘルプを表示します");
   a.footer("ファイル名 ...");
+  a.set_progam_name("hoge");
 
-  if (argc==1){
+  bool ok=a.parse(argc, argv);
+
+  if (argc==1 || a.exist("help")){
     cerr<<a.usage();
     return 0;
   }
-
-  if (!a.parse(argc, argv)){
+  
+  if (!ok){
     cerr<<a.error()<<endl<<a.usage();
-    return 0;
-  }
-
-  if (a.exist("help")){
-    cerr<<a.usage();
     return 0;
   }
 
