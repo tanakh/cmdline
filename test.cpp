@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
   a.footer("ファイル名 ...");
 
   if (argc==1){
-    cerr<<a.usage()<<endl;
+    cerr<<a.usage();
     return 0;
   }
 

@@ -287,13 +287,13 @@ public:
 	  continue;
 	}
 
-	if (i+1>=argc || strncmp(argv[i+1], "-", 1)==0 ||
-	    !options[lookup[last]]->has_value()){
-	  set_option(lookup[last]);
-	  continue;
+	if (i+1<argc && options[lookup[last]]->has_value()){
+	  set_option(lookup[last], argv[i+1]);
+	  i++;
 	}
-	set_option(lookup[last], argv[i+1]);
-	i++;
+	else{
+	  set_option(lookup[last]);
+	}
       }
       else{
 	others.push_back(argv[i]);
