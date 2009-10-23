@@ -101,14 +101,6 @@ Target lexical_cast(const Source &arg)
   return lexical_cast_t<Target, Source, detail::is_same<Target, Source>::value>::cast(arg);
 }
 
-
-template <class T>
-struct lexical_caster{
-  T operator()(const std::string &str){
-    return lexical_cast<T>(str);
-  }
-};
-
 static inline std::string demangle(const std::string &name)
 {
   int status=0;
@@ -141,6 +133,13 @@ public:
   const char *what() const throw() { return msg.c_str(); }
 private:
   std::string msg;
+};
+
+template <class T>
+struct default_reader{
+  T operator()(const std::string &str){
+    return detail::lexical_cast<T>(str);
+  }
 };
 
 template <class T>
@@ -185,10 +184,7 @@ public:
 	   const std::string &desc="",
 	   bool need=true,
 	   const T def=T()){
-    typedef detail::lexical_caster<T> F;
-    if (options.count(name)) throw cmdline_error("multiple definition: "+name);
-    options[name]=new option_with_value_with_reader<T, F>(name, short_name, need, def, desc, F());
-    ordered.push_back(options[name]);
+    add(name, short_name, desc, need, def, default_reader<T>());
   }
 
   template <class T, class F>
