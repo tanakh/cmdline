@@ -33,12 +33,12 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   cmdline::parser a;
-  a.add<string>("host", 'h', "ホスト名", true, "");
-  a.add<int>("port", 'p', "ポート番号", false, 80, cmdline::range(1, 65535));
-  a.add<string>("type", 't', "種類", false, "http", cmdline::oneof<string>("http", "https", "ssh", "ftp"));
-  a.add("help", 0, "ヘルプを表示します");
-  a.footer("ファイル名 ...");
-  a.set_progam_name("hoge");
+  a.add<string>("host", 'h', "host name", true, "");
+  a.add<int>("port", 'p', "port number", false, 80, cmdline::range(1, 65535));
+  a.add<string>("type", 't', "protocol type", false, "http", cmdline::oneof<string>("http", "https", "ssh", "ftp"));
+  a.add("help", 0, "print this message");
+  a.footer("filename ...");
+  a.set_progam_name("test");
 
   bool ok=a.parse(argc, argv);
 
