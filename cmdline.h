@@ -463,7 +463,13 @@ public:
 
   std::string usage() const {
     std::ostringstream oss;
-    oss<<"usage: "<<prog_name<<" [options] ... "<<ftr<<std::endl;
+    oss<<"usage: "<<prog_name<<" ";
+    for (size_t i=0; i<ordered.size(); i++){
+      if (ordered[i]->must())
+	oss<<ordered[i]->short_description()<<" ";
+    }
+    
+    oss<<"[options] ... "<<ftr<<std::endl;
     oss<<"options:"<<std::endl;
 
     size_t max_width=0;
@@ -519,10 +525,12 @@ private:
     virtual bool set(const std::string &value)=0;
     virtual bool has_set() const=0;
     virtual bool valid() const=0;
+    virtual bool must() const=0;
 
     virtual const std::string &name() const=0;
     virtual char short_name() const=0;
     virtual const std::string &description() const=0;
+    virtual std::string short_description() const=0;
   };
 
   class option_without_value : public option_base {
@@ -553,6 +561,10 @@ private:
       return true;
     }
 
+    bool must() const{
+      return false;
+    }
+
     const std::string &name() const{
       return nam;
     }
@@ -563,6 +575,10 @@ private:
 
     const std::string &description() const {
       return desc;
+    }
+
+    std::string short_description() const{
+      return "--"+nam;
     }
 
   private:
@@ -616,6 +632,10 @@ private:
       return true;
     }
 
+    bool must() const{
+      return need;
+    }
+
     const std::string &name() const{
       return nam;
     }
@@ -628,10 +648,14 @@ private:
       return desc;
     }
 
+    std::string short_description() const{
+      return "--"+nam+"="+detail::readable_typename<T>();
+    }
+
   protected:
     std::string full_description(const std::string &desc){
       return
-	desc+"("+detail::readable_typename<T>()+
+	desc+" ("+detail::readable_typename<T>()+
 	(need?"":"[="+detail::lexical_cast<std::string>(def)+"]")
 	+")";
     }
