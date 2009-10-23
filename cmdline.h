@@ -656,7 +656,7 @@ private:
     std::string full_description(const std::string &desc){
       return
 	desc+" ("+detail::readable_typename<T>()+
-	(need?"":"[="+detail::lexical_cast<std::string>(def)+"]")
+	(need?"":" [="+detail::lexical_cast<std::string>(def)+"]")
 	+")";
     }
 
