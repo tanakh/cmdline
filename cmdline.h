@@ -365,7 +365,59 @@ public:
     return others;
   }
 
-  bool parse(int argc, char *argv[]){
+  bool parse(const std::string &arg){
+    std::vector<std::string> args;
+
+    std::string buf;
+    bool in_quote=false;
+    for (std::string::size_type i=0; i<arg.length(); i++){
+      if (arg[i]=='\"'){
+	in_quote=!in_quote;
+	continue;
+      }
+
+      if (arg[i]==' ' && !in_quote){
+	args.push_back(buf);
+	buf="";
+	continue;
+      }
+
+      if (arg[i]=='\\'){
+	i++;
+	if (i>=arg.length()){
+	  errors.push_back("unexpected occurrence of '\\' at end of string");
+	  return false;
+	}
+      }
+
+      buf+=arg[i];
+    }
+
+    if (in_quote){
+      errors.push_back("quote is not closed");
+      return false;
+    }
+
+    if (buf.length()>0)
+      args.push_back(buf);
+
+    for (size_t i=0; i<args.size(); i++)
+      std::cout<<"\""<<args[i]<<"\""<<std::endl;
+
+    return parse(args);
+  }
+
+  bool parse(const std::vector<std::string> &args){
+    int argc=static_cast<int>(args.size());
+    std::vector<const char*> argv(argc);
+
+    for (int i=0; i<argc; i++)
+      argv[i]=args[i].c_str();
+
+    return parse(argc, &argv[0]);
+  }
+
+  bool parse(int argc, const char * const argv[]){
     errors.clear();
     others.clear();
 
@@ -393,7 +445,7 @@ public:
 
     for (int i=1; i<argc; i++){
       if (strncmp(argv[i], "--", 2)==0){
-	char *p=strchr(argv[i]+2, '=');
+	const char *p=strchr(argv[i]+2, '=');
 	if (p){
 	  std::string name(argv[i]+2, p);
 	  std::string val(p+1);
