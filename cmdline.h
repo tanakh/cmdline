@@ -344,7 +344,7 @@ public:
     ftr=f;
   }
 
-  void set_progam_name(const std::string &name){
+  void set_program_name(const std::string &name){
     prog_name=name;
   }
 
