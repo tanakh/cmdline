@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <algorithm>
 #include <cxxabi.h>
-#include <malloc.h>
 
 namespace cmdline{
 
