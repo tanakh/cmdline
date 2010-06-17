@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <algorithm>
 #include <cxxabi.h>
+#include <cstdlib>
 
 namespace cmdline{
 
@@ -452,7 +453,23 @@ public:
 	}
 	else{
 	  std::string name(argv[i]+2);
-	  set_option(name);
+          if (options.count(name)==0){
+            errors.push_back("undefined option: --"+name);
+            continue;
+          }
+          if (options[name]->has_value()){
+            if (i+1>=argc){
+              errors.push_back("option needs value: --"+name);
+              continue;
+            }
+            else{
+              i++;
+              set_option(name, argv[i]);
+            }
+          }
+          else{
+            set_option(name);
+          }
 	}
       }
       else if (strncmp(argv[i], "-", 1)==0){
