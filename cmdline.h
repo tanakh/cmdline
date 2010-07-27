@@ -348,9 +348,9 @@ public:
     prog_name=name;
   }
 
-  bool exist(const std::string &name){
+  bool exist(const std::string &name) const {
     if (options.count(name)==0) throw cmdline_error("there is no flag: --"+name);
-    return options[name]->has_set();
+    return options.find(name)->second->has_set();
   }
 
   template <class T>
