@@ -177,4 +177,15 @@ A parser shows program name to usage message.
 Default program name is determin by argv[0].
 set_program_name() method can set any string to program name.
 
+Process flags manually
+----------------------
+
+parse_check() method parses command line arguments and
+check error and help flag.
+
+You can do this process mannually.
+bool parse() method parses command line arguments then
+returns if they are valid.
+You should check the result, and do what you want yourself.
+
 (For more information, you may read test2.cpp.)
