@@ -518,6 +518,24 @@ public:
     return errors.size()==0;
   }
 
+  void parse_check(const std::string &arg){
+    if (!options.count("help"))
+      add("help", '?', "print this message");
+    check(0, parse(arg));
+  }
+
+  void parse_check(const std::vector<std::string> &args){
+    if (!options.count("help"))
+      add("help", '?', "print this message");
+    check(args.size(), parse(args));
+  }
+
+  void parse_check(int argc, char *argv[]){
+    if (!options.count("help"))
+      add("help", '?', "print this message");
+    check(argc, parse(argc, argv));
+  }
+
   std::string error() const{
     return errors.size()>0?errors[0]:"";
   }
@@ -561,6 +579,18 @@ public:
   }
 
 private:
+
+  void check(int argc, bool ok){
+    if ((argc==1 && !ok) || exist("help")){
+      std::cerr<<usage();
+      exit(0);
+    }
+
+    if (!ok){
+      std::cerr<<error()<<std::endl<<usage();
+      exit(1);
+    }
+  }
 
   void set_option(const std::string &name){
     if (options.count(name)==0){
