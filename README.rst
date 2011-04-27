@@ -54,7 +54,7 @@ This is an example of simple usage.
     // It returns only if command line arguments are valid.
     // If arguments are invalid, a parser output error msgs then exit program.
     // If help flag ('--help' or '-?') is specified, a parser output usage message then exit program.
-    a.parse_run(argc, argv);
+    a.parse_check(argc, argv);
     
     // use flag values
     cout << a.get<string>("type") << "://"
