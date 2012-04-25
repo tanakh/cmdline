@@ -118,7 +118,7 @@ std::string readable_typename()
 }
 
 template <>
-std::string readable_typename<std::string>()
+inline std::string readable_typename<std::string>()
 {
   return "string";
 }
