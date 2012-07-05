@@ -165,7 +165,7 @@ template <class T>
 struct oneof_reader{
   T operator()(const std::string &s){
     T ret=default_reader<T>()(s);
-    if (std::find(alt.begin(), alt.end(), s)==alt.end())
+    if (std::find(alt.begin(), alt.end(), ret)==alt.end())
       throw cmdline_error("");
     return ret;
   }
