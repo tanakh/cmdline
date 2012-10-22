@@ -117,6 +117,12 @@ std::string readable_typename()
   return demangle(typeid(T).name());
 }
 
+template <class T>
+std::string default_value(T def)
+{
+  return detail::lexical_cast<std::string>(def);
+}
+
 template <>
 inline std::string readable_typename<std::string>()
 {
@@ -754,7 +760,7 @@ private:
     std::string full_description(const std::string &desc){
       return
         desc+" ("+detail::readable_typename<T>()+
-        (need?"":" [="+detail::lexical_cast<std::string>(def)+"]")
+        (need?"":" [="+detail::default_value<T>(def)+"]")
         +")";
     }
 
