@@ -536,7 +536,7 @@ public:
     check(args.size(), parse(args));
   }
 
-  void parse_check(int argc, char *argv[]){
+  void parse_check(int argc, const char *argv[]){
     if (!options.count("help"))
       add("help", '?', "print this message");
     check(argc, parse(argc, argv));
