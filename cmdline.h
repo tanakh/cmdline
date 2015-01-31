@@ -36,9 +36,7 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
-#if defined(_MSC_VER)
-#include <boost/units/detail/utility.hpp>
-#else
+#if !defined(_MSC_VER)
 #include <cxxabi.h>
 #endif
 #include <cstdlib>
@@ -111,7 +109,7 @@ Target lexical_cast(const Source &arg)
 }
 
 #if defined(_MSC_VER)
-using boost::units::detail::demangle;
+static inline std::string demangle(const std::string &name) { return name; }
 #else
 static inline std::string demangle(const std::string &name)
 {
