@@ -36,8 +36,17 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
-#include <cxxabi.h>
 #include <cstdlib>
+#if defined(_MSC_VER)
+#include <boost/units/detail/utility.hpp>
+#else
+#include <cxxabi.h>
+#endif
+
+#if defined(_MSC_VER)
+#undef max 
+#undef min 
+#endif 
 
 namespace cmdline{
 
@@ -102,6 +111,9 @@ Target lexical_cast(const Source &arg)
   return lexical_cast_t<Target, Source, detail::is_same<Target, Source>::value>::cast(arg);
 }
 
+#if defined(_MSC_VER)
+using boost::units::detail::demangle;
+#else
 static inline std::string demangle(const std::string &name)
 {
   int status=0;
@@ -110,6 +122,7 @@ static inline std::string demangle(const std::string &name)
   free(p);
   return ret;
 }
+#endif
 
 template <class T>
 std::string readable_typename()
