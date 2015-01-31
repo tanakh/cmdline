@@ -36,16 +36,15 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
-#include <cstdlib>
 #if defined(_MSC_VER)
 #include <boost/units/detail/utility.hpp>
 #else
 #include <cxxabi.h>
 #endif
+#include <cstdlib>
 
 #if defined(_MSC_VER)
 #undef max 
-#undef min 
 #endif 
 
 namespace cmdline{
