@@ -41,10 +41,6 @@
 #endif
 #include <cstdlib>
 
-#if defined(_MSC_VER)
-#undef max 
-#endif 
-
 namespace cmdline{
 
 namespace detail{
