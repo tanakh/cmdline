@@ -36,7 +36,12 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
-#if !defined(_MSC_VER)
+#if defined(_MSC_VER)
+#include <windows.h>
+#include <dbghelp.h>
+#undef max
+#pragma comment(lib, "dbghelp.lib")
+#else
 #include <cxxabi.h>
 #endif
 #include <cstdlib>
@@ -104,18 +109,21 @@ Target lexical_cast(const Source &arg)
   return lexical_cast_t<Target, Source, detail::is_same<Target, Source>::value>::cast(arg);
 }
 
-#if defined(_MSC_VER)
-static inline std::string demangle(const std::string &name) { return name; }
-#else
 static inline std::string demangle(const std::string &name)
 {
+#if defined(_MSC_VER)
+  TCHAR ret[256];
+  std::memset(ret, 0, 256);
+  ::UnDecorateSymbolName(name.c_str(), ret, 256, 0);
+  return ret;
+#else
   int status=0;
   char *p=abi::__cxa_demangle(name.c_str(), 0, 0, &status);
   std::string ret(p);
   free(p);
   return ret;
-}
 #endif
+}
 
 template <class T>
 std::string readable_typename()
