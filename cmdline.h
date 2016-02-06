@@ -36,7 +36,11 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
+
+#if defined(__clang__) || defined(__GNUC__)
 #include <cxxabi.h>
+#endif 
+
 #include <cstdlib>
 
 namespace cmdline{
@@ -104,11 +108,15 @@ Target lexical_cast(const Source &arg)
 
 static inline std::string demangle(const std::string &name)
 {
+#if defined(__clang__) || defined(__GNUC__)
   int status=0;
   char *p=abi::__cxa_demangle(name.c_str(), 0, 0, &status);
   std::string ret(p);
   free(p);
   return ret;
+#else
+  return name;
+#endif
 }
 
 template <class T>
@@ -533,10 +541,10 @@ public:
   void parse_check(const std::vector<std::string> &args){
     if (!options.count("help"))
       add("help", '?', "print this message");
-    check(args.size(), parse(args));
+    check(static_cast<int>(args.size()), parse(args));
   }
 
-  void parse_check(int argc, char *argv[]){
+  void parse_check(int argc, const char *argv[]){
     if (!options.count("help"))
       add("help", '?', "print this message");
     check(argc, parse(argc, argv));
@@ -721,7 +729,7 @@ private:
         actual=read(value);
         has=true;
       }
-      catch(const std::exception &e){
+      catch(const std::exception &){
         return false;
       }
       return true;
