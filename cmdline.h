@@ -36,15 +36,16 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
+#include <cstdlib>
 #if defined(_MSC_VER)
+#define CMDLINE_DEMANGLE_WINDOWS
 #include <windows.h>
 #include <dbghelp.h>
 #undef max
 #pragma comment(lib, "dbghelp.lib")
-#else
+#elif defined(__clang__) || defined(__GNUC__)
 #include <cxxabi.h>
 #endif
-#include <cstdlib>
 
 namespace cmdline{
 
@@ -58,7 +59,7 @@ public:
     std::stringstream ss;
     if (!(ss<<arg && ss>>ret && ss.eof()))
       throw std::bad_cast();
-    
+
     return ret;
   }
 };
@@ -68,7 +69,7 @@ class lexical_cast_t<Target, Source, true>{
 public:
   static Target cast(const Source &arg){
     return arg;
-  }  
+  }
 };
 
 template <typename Source>
@@ -111,7 +112,7 @@ Target lexical_cast(const Source &arg)
 
 static inline std::string demangle(const std::string &name)
 {
-#if defined(_MSC_VER)
+#if defined(CMDLINE_DEMANGLE_WINDOWS)
   TCHAR ret[256];
   std::memset(ret, 0, 256);
   ::UnDecorateSymbolName(name.c_str(), ret, 256, 0);
@@ -547,10 +548,10 @@ public:
   void parse_check(const std::vector<std::string> &args){
     if (!options.count("help"))
       add("help", '?', "print this message");
-    check(args.size(), parse(args));
+    check(static_cast<int>(args.size()), parse(args));
   }
 
-  void parse_check(int argc, char *argv[]){
+  void parse_check(int argc, const char *argv[]){
     if (!options.count("help"))
       add("help", '?', "print this message");
     check(argc, parse(argc, argv));
@@ -574,7 +575,7 @@ public:
       if (ordered[i]->must())
         oss<<ordered[i]->short_description()<<" ";
     }
-    
+
     oss<<"[options] ... "<<ftr<<std::endl;
     oss<<"options:"<<std::endl;
 
@@ -735,7 +736,7 @@ private:
         actual=read(value);
         has=true;
       }
-      catch(const std::exception &e){
+      catch(const std::exception &){
         return false;
       }
       return true;
