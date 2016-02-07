@@ -21,7 +21,7 @@ Normal usage
 
 This is an example of simple usage.
 
-::
+.. sourcecode:: cpp
 
   // include cmdline.h
   #include "cmdline.h"
@@ -35,7 +35,7 @@ This is an example of simple usage.
     // 1st argument is long name
     // 2nd argument is short name (no short name if '\0' specified)
     // 3rd argument is description
-    // 4th argument is mandatory (optional. default is false)
+    // 4th argument is mandatory (optional. default is true)
     // 5th argument is default value  (optional. it used when mandatory is false)
     a.add<string>("host", 'h', "host name", true, "");
     
@@ -143,16 +143,16 @@ Rest of arguments are referenced by rest() method.
 It returns vector of string.
 Usualy, they are used to specify filenames, and so on.
 
-::
+.. sourcecode:: cpp
 
   for (int i = 0; i < a.rest().size(); i++)
-    cout << a.rest()[i] << endl\;
+    cout << a.rest()[i] << endl;
 
 - footer
 
 footer() method is add a footer text of usage.
 
-::
+.. sourcecode:: cpp
 
   ...
   a.footer("filename ...");
