@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cxxabi.h>
 #include <cstdlib>
+#include <iterator>
 
 namespace cmdline{
 
@@ -319,9 +320,10 @@ public:
 
   void add(const std::string &name,
            char short_name=0,
-           const std::string &desc=""){
+           const std::string &desc="",
+           bool serialize=false){
     if (options.count(name)) throw cmdline_error("multiple definition: "+name);
-    options[name]=new option_without_value(name, short_name, desc);
+    options[name]=new option_without_value(name, short_name, desc, serialize);
     ordered.push_back(options[name]);
   }
 
@@ -330,8 +332,9 @@ public:
            char short_name=0,
            const std::string &desc="",
            bool need=true,
-           const T def=T()){
-    add(name, short_name, desc, need, def, default_reader<T>());
+           const T def=T(),
+           bool serialize=true){
+    add(name, short_name, desc, need, def, default_reader<T>(), serialize);
   }
 
   template <class T, class F>
@@ -340,9 +343,10 @@ public:
            const std::string &desc="",
            bool need=true,
            const T def=T(),
-           F reader=F()){
+           F reader=F(),
+           bool serialize=true){
     if (options.count(name)) throw cmdline_error("multiple definition: "+name);
-    options[name]=new option_with_value_with_reader<T, F>(name, short_name, need, def, desc, reader);
+    options[name]=new option_with_value_with_reader<T, F>(name, short_name, need, def, desc, reader, serialize);
     ordered.push_back(options[name]);
   }
 
@@ -413,19 +417,21 @@ public:
     return parse(args);
   }
 
-  bool parse(const std::vector<std::string> &args){
+  bool parse(const std::vector<std::string> &args, bool clear=true){
     int argc=static_cast<int>(args.size());
     std::vector<const char*> argv(argc);
 
     for (int i=0; i<argc; i++)
       argv[i]=args[i].c_str();
 
-    return parse(argc, &argv[0]);
+    return parse(argc, &argv[0], clear);
   }
 
-  bool parse(int argc, const char * const argv[]){
-    errors.clear();
-    others.clear();
+  bool parse(int argc, const char * const argv[], bool clear=true){
+    if (clear){
+      errors.clear();
+      others.clear();
+    }
 
     if (argc<1){
       errors.push_back("argument number must be longer than 0");
@@ -584,6 +590,24 @@ public:
     return oss.str();
   }
 
+  friend std::ostream & operator << (std::ostream &os, parser &p) {
+    for (size_t i=0; i<p.ordered.size(); i++)
+      (*p.ordered[i])>>os;
+    return os;
+  }
+
+  friend std::istream & operator >> (std::istream &is, parser &p) {
+    std::vector<std::string> args;
+    args.push_back(p.prog_name);
+    std::copy(
+      std::istream_iterator<std::string>(is),
+      std::istream_iterator<std::string>(),
+      std::back_inserter(args)
+    );
+    p.check(static_cast<int>(args.size()), p.parse(args, false));
+    return is;
+  }
+
 private:
 
   void check(int argc, bool ok){
@@ -635,14 +659,16 @@ private:
     virtual char short_name() const=0;
     virtual const std::string &description() const=0;
     virtual std::string short_description() const=0;
+    virtual std::ostream & operator>>(std::ostream& os) const=0;
   };
 
   class option_without_value : public option_base {
   public:
     option_without_value(const std::string &name,
                          char short_name,
-                         const std::string &desc)
-      :nam(name), snam(short_name), desc(desc), has(false){
+                         const std::string &desc,
+                         bool serialize)
+      :nam(name), snam(short_name), desc(desc), has(false), serialize(serialize){
     }
     ~option_without_value(){}
 
@@ -685,11 +711,18 @@ private:
       return "--"+nam;
     }
 
+    std::ostream & operator>>(std::ostream& os) const{
+      if (serialize)
+        os<<"--"<<nam<<std::endl;
+      return os;
+    }
+
   private:
     std::string nam;
     char snam;
     std::string desc;
     bool has;
+    bool serialize;
   };
 
   template <class T>
@@ -699,9 +732,10 @@ private:
                       char short_name,
                       bool need,
                       const T &def,
-                      const std::string &desc)
+                      const std::string &desc,
+                      bool serialize)
       : nam(name), snam(short_name), need(need), has(false)
-      , def(def), actual(def) {
+      , def(def), actual(def), serialize(serialize) {
       this->desc=full_description(desc);
     }
     ~option_with_value(){}
@@ -756,6 +790,12 @@ private:
       return "--"+nam+"="+detail::readable_typename<T>();
     }
 
+    std::ostream & operator>>(std::ostream& os) const{
+      if (serialize)
+        os<<"--"<<nam<<"="<<actual<<std::endl;
+      return os;
+    }
+
   protected:
     std::string full_description(const std::string &desc){
       return
@@ -774,6 +814,7 @@ private:
     bool has;
     T def;
     T actual;
+    bool serialize;
   };
 
   template <class T, class F>
@@ -784,8 +825,9 @@ private:
                                   bool need,
                                   const T def,
                                   const std::string &desc,
-                                  F reader)
-      : option_with_value<T>(name, short_name, need, def, desc), reader(reader){
+                                  F reader,
+                                  bool serialize)
+      : option_with_value<T>(name, short_name, need, def, desc, serialize), reader(reader){
     }
 
   private:
