@@ -360,6 +360,14 @@ public:
   }
 
   template <class T>
+  T &get(const std::string &name) {
+    if (options.count(name)==0) throw cmdline_error("there is no flag: --"+name);
+    option_with_value<T> *p=dynamic_cast<option_with_value<T>*>(options.find(name)->second);
+    if (p==NULL) throw cmdline_error("type mismatch flag '"+name+"'");
+    return p->get();
+  }
+
+  template <class T>
   const T &get(const std::string &name) const {
     if (options.count(name)==0) throw cmdline_error("there is no flag: --"+name);
     const option_with_value<T> *p=dynamic_cast<const option_with_value<T>*>(options.find(name)->second);
@@ -705,6 +713,10 @@ private:
       this->desc=full_description(desc);
     }
     ~option_with_value(){}
+
+    T &get() {
+      return actual;
+    }
 
     const T &get() const {
       return actual;
