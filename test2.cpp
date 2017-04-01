@@ -4,14 +4,14 @@ All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the <organization> nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
+	* Redistributions of source code must retain the above copyright
+	  notice, this list of conditions and the following disclaimer.
+	* Redistributions in binary form must reproduce the above copyright
+	  notice, this list of conditions and the following disclaimer in the
+	  documentation and/or other materials provided with the distribution.
+	* Neither the name of the <organization> nor the
+	  names of its contributors may be used to endorse or promote products
+	  derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY <copyright holder> ''AS IS'' AND ANY
 EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -32,30 +32,30 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  cmdline::parser a;
-  a.add<string>("host", 'h', "host name", true, "");
-  a.add<int>("port", 'p', "port number", false, 80, cmdline::range(1, 65535));
-  a.add<string>("type", 't', "protocol type", false, "http", cmdline::oneof<string>("http", "https", "ssh", "ftp"));
-  a.add("help", 0, "print this message");
-  a.footer("filename ...");
-  a.set_program_name("test");
+	cmdline::parser a;
+	a.add<string>("host", 'h', "host name", true, "");
+	a.add<int>("port", 'p', "port number", false, 80, cmdline::range(1, 65535));
+	a.add<string>("type", 't', "protocol type", false, "http", cmdline::oneof<string>("http", "https", "ssh", "ftp"));
+	a.add("help", 0, "print this message");
+	a.footer("filename ...");
+	a.set_program_name("test");
 
-  bool ok=a.parse(argc, argv);
+	bool ok = a.parse(argc, argv);
 
-  if (argc==1 || a.exist("help")){
-    cerr<<a.usage();
-    return 0;
-  }
-  
-  if (!ok){
-    cerr<<a.error()<<endl<<a.usage();
-    return 0;
-  }
+	if (argc == 1 || a.exist("help")) {
+		cerr << a.usage();
+		return 0;
+	}
 
-  cout<<a.get<string>("host")<<":"<<a.get<int>("port")<<endl;
+	if (!ok) {
+		cerr << a.error() << endl << a.usage();
+		return 0;
+	}
 
-  for (size_t i=0; i<a.rest().size(); i++)
-    cout<<"- "<<a.rest()[i]<<endl;
+	cout << a.get<string>("host") << ":" << a.get<int>("port") << endl;
 
-  return 0;
+	for (size_t i = 0; i < a.rest().size(); i++)
+		cout << "- " << a.rest()[i] << endl;
+
+	return 0;
 }
