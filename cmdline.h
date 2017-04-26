@@ -180,132 +180,24 @@ private:
   std::vector<T> alt;
 };
 
-template <class T>
-oneof_reader<T> oneof(T a1)
+template <typename Reader, typename T>
+Reader oneof_impl(Reader& reader, T last)
 {
-  oneof_reader<T> ret;
-  ret.add(a1);
-  return ret;
+  reader.add(last);
+  return reader;
 }
 
-template <class T>
-oneof_reader<T> oneof(T a1, T a2)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  return ret;
+template <typename Reader, typename T, typename... Rest>
+Reader oneof_impl(Reader& reader, T&& first, Rest&&... rest) {
+  reader.add(first);
+  return oneof_impl(reader, rest...);
 }
 
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  return ret;
+template <typename T, typename... Rest>
+oneof_reader<T> oneof(Rest&&... rest) {
+  oneof_reader<T> reader;
+  return oneof_impl(reader, rest...);
 }
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  ret.add(a8);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8, T a9)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  ret.add(a8);
-  ret.add(a9);
-  return ret;
-}
-
-template <class T>
-oneof_reader<T> oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8, T a9, T a10)
-{
-  oneof_reader<T> ret;
-  ret.add(a1);
-  ret.add(a2);
-  ret.add(a3);
-  ret.add(a4);
-  ret.add(a5);
-  ret.add(a6);
-  ret.add(a7);
-  ret.add(a8);
-  ret.add(a9);
-  ret.add(a10);
-  return ret;
-}
-
-//-----
 
 class parser{
 public:
