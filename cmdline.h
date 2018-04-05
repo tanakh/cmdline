@@ -135,7 +135,7 @@ inline std::string readable_typename<std::string>()
 
 class cmdline_error : public std::exception {
 public:
-  cmdline_error(const std::string &msg): msg(msg){}
+  cmdline_error(const std::string &message): msg(message){}
   ~cmdline_error() throw() {}
   const char *what() const throw() { return msg.c_str(); }
 private:
@@ -151,7 +151,7 @@ struct default_reader{
 
 template <class T>
 struct range_reader{
-  range_reader(const T &low, const T &high): low(low), high(high) {}
+  range_reader(const T &lower_bound, const T &upper_bound): low(lower_bound), high(upper_bound) {}
   T operator()(const std::string &s) const {
     T ret=default_reader<T>()(s);
     if (!(ret>=low && ret<=high)) throw cmdline::cmdline_error("range_error");
@@ -639,10 +639,10 @@ private:
 
   class option_without_value : public option_base {
   public:
-    option_without_value(const std::string &name,
+    option_without_value(const std::string &full_name,
                          char short_name,
-                         const std::string &desc)
-      :nam(name), snam(short_name), desc(desc), has(false){
+                         const std::string &description)
+      :nam(full_name), snam(short_name), desc(description), has(false){
     }
     ~option_without_value(){}
 
@@ -695,14 +695,14 @@ private:
   template <class T>
   class option_with_value : public option_base {
   public:
-    option_with_value(const std::string &name,
+    option_with_value(const std::string &full_name,
                       char short_name,
-                      bool need,
-                      const T &def,
-                      const std::string &desc)
-      : nam(name), snam(short_name), need(need), has(false)
-      , def(def), actual(def) {
-      this->desc=full_description(desc);
+                      bool is_needed,
+                      const T &definition,
+                      const std::string &description)
+      : nam(full_name), snam(short_name), need(is_needed), has(false)
+      , def(definition), actual(definition) {
+      this->desc=full_description(description);
     }
     ~option_with_value(){}
 
@@ -757,9 +757,9 @@ private:
     }
 
   protected:
-    std::string full_description(const std::string &desc){
+    std::string full_description(const std::string &description){
       return
-        desc+" ("+detail::readable_typename<T>()+
+        description+" ("+detail::readable_typename<T>()+
         (need?"":" [="+detail::default_value<T>(def)+"]")
         +")";
     }
@@ -779,13 +779,13 @@ private:
   template <class T, class F>
   class option_with_value_with_reader : public option_with_value<T> {
   public:
-    option_with_value_with_reader(const std::string &name,
+    option_with_value_with_reader(const std::string &full_name,
                                   char short_name,
-                                  bool need,
-                                  const T def,
-                                  const std::string &desc,
-                                  F reader)
-      : option_with_value<T>(name, short_name, need, def, desc), reader(reader){
+                                  bool is_needed,
+                                  const T definition,
+                                  const std::string &description,
+                                  F value_reader)
+      : option_with_value<T>(full_name, short_name, is_needed, definition, description), reader(value_reader){
     }
 
   private:
