@@ -39,6 +39,10 @@
 #include <cxxabi.h>
 #include <cstdlib>
 
+#ifdef max
+#undef max
+#endif
+
 namespace cmdline{
 
 namespace detail{
