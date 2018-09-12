@@ -36,7 +36,9 @@
 #include <typeinfo>
 #include <cstring>
 #include <algorithm>
+#ifdef __GNUC__
 #include <cxxabi.h>
+#endif
 #include <cstdlib>
 
 namespace cmdline{
@@ -104,11 +106,15 @@ Target lexical_cast(const Source &arg)
 
 static inline std::string demangle(const std::string &name)
 {
-  int status=0;
-  char *p=abi::__cxa_demangle(name.c_str(), 0, 0, &status);
-  std::string ret(p);
-  free(p);
-  return ret;
+#ifdef _MSC_VER
+    return name;
+#elif defined __GNUC__
+    int status = 0;
+    char *p = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
+    std::string ret(p);
+    free(p);
+    return ret;
+#endif
 }
 
 template <class T>
@@ -311,10 +317,66 @@ class parser{
 public:
   parser(){
   }
+
+  parser(const parser &obj) {
+      copy_parser(obj, *this);
+  }
+
+  parser(parser &&obj) {
+      move_parser(obj, *this);
+  }
+
+  parser &operator=(const parser &obj) {
+      copy_parser(obj, *this);
+      return *this;
+  }
+
+  parser &operator=(parser &&obj) {
+      move_parser(obj, *this);
+      return *this;
+  }
+
   ~parser(){
     for (std::map<std::string, option_base*>::iterator p=options.begin();
          p!=options.end(); p++)
       delete p->second;
+  }
+
+  void clear() {
+      for (std::map<std::string, option_base*>::iterator p = options.begin();
+          p != options.end(); p++)
+          p->second->clear();
+
+      errors.clear();
+      others.clear();
+  }
+
+  void move_parser(parser &src, parser &dest) {
+      dest.options = std::move(src.options);
+      dest.ordered = std::move(src.ordered);
+      dest.ftr = std::move(src.ftr);
+      dest.prog_name = std::move(src.prog_name);
+      dest.others = std::move(src.others);
+      dest.errors = std::move(src.errors);
+
+      src.options.clear();
+      src.ordered.clear();
+      src.others.clear();
+      src.errors.clear();
+  }
+
+  void copy_parser(const parser &src, parser &dest) {
+      for (std::map<std::string, option_base*>::const_iterator p = src.options.begin();
+          p != src.options.end(); p++) {
+          option_base *new_opt = p->second->clone();
+          dest.options[p->first] = new_opt;
+          dest.ordered.push_back(new_opt);
+      }
+
+      dest.ftr = src.ftr;
+      dest.prog_name = src.prog_name;
+      dest.others = src.others;
+      dest.errors = src.errors;
   }
 
   void add(const std::string &name,
@@ -624,6 +686,8 @@ private:
   public:
     virtual ~option_base(){}
 
+    virtual void clear()=0;
+    virtual option_base *clone() const=0;
     virtual bool has_value() const=0;
     virtual bool set()=0;
     virtual bool set(const std::string &value)=0;
@@ -651,6 +715,16 @@ private:
     bool set(){
       has=true;
       return true;
+    }
+
+    void clear() {
+        has = false;
+    }
+
+    option_base *clone() const {
+        option_without_value *new_opt = new option_without_value(nam, snam, desc);
+        new_opt->has = has;
+        return new_opt;
     }
 
     bool set(const std::string &){
@@ -708,6 +782,11 @@ private:
 
     const T &get() const {
       return actual;
+    }
+
+    void clear() {
+        actual = def;
+        has = false;
     }
 
     bool has_value() const { return true; }
@@ -786,6 +865,14 @@ private:
                                   const std::string &desc,
                                   F reader)
       : option_with_value<T>(name, short_name, need, def, desc), reader(reader){
+    }
+
+    option_base *clone() const {
+        option_with_value_with_reader *new_opt = new option_with_value_with_reader<T, F>(
+            this->nam, this->snam, this->need, this->def, this->desc, this->reader);
+        new_opt->has = this->has;
+        new_opt->actual = this->actual;
+        return new_opt;
     }
 
   private:
