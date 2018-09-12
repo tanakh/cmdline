@@ -319,21 +319,21 @@ public:
   }
 
   parser(const parser &obj) {
-      copy_parser(obj, *this);
+    copy_parser(obj, *this);
   }
 
   parser(parser &&obj) {
-      move_parser(obj, *this);
+    move_parser(obj, *this);
   }
 
   parser &operator=(const parser &obj) {
-      copy_parser(obj, *this);
-      return *this;
+    copy_parser(obj, *this);
+    return *this;
   }
 
   parser &operator=(parser &&obj) {
-      move_parser(obj, *this);
-      return *this;
+    move_parser(obj, *this);
+    return *this;
   }
 
   ~parser(){
@@ -343,40 +343,12 @@ public:
   }
 
   void clear() {
-      for (std::map<std::string, option_base*>::iterator p = options.begin();
-          p != options.end(); p++)
-          p->second->clear();
+    for (std::map<std::string, option_base*>::iterator p = options.begin();
+        p != options.end(); p++)
+        p->second->clear();
 
-      errors.clear();
-      others.clear();
-  }
-
-  void move_parser(parser &src, parser &dest) {
-      dest.options = std::move(src.options);
-      dest.ordered = std::move(src.ordered);
-      dest.ftr = std::move(src.ftr);
-      dest.prog_name = std::move(src.prog_name);
-      dest.others = std::move(src.others);
-      dest.errors = std::move(src.errors);
-
-      src.options.clear();
-      src.ordered.clear();
-      src.others.clear();
-      src.errors.clear();
-  }
-
-  void copy_parser(const parser &src, parser &dest) {
-      for (std::map<std::string, option_base*>::const_iterator p = src.options.begin();
-          p != src.options.end(); p++) {
-          option_base *new_opt = p->second->clone();
-          dest.options[p->first] = new_opt;
-          dest.ordered.push_back(new_opt);
-      }
-
-      dest.ftr = src.ftr;
-      dest.prog_name = src.prog_name;
-      dest.others = src.others;
-      dest.errors = src.errors;
+    errors.clear();
+    others.clear();
   }
 
   void add(const std::string &name,
@@ -486,8 +458,7 @@ public:
   }
 
   bool parse(int argc, const char * const argv[]){
-    errors.clear();
-    others.clear();
+    clear();
 
     if (argc<1){
       errors.push_back("argument number must be longer than 0");
@@ -647,6 +618,33 @@ public:
   }
 
 private:
+  void move_parser(parser &src, parser &dest) {
+    dest.options = std::move(src.options);
+    dest.ordered = std::move(src.ordered);
+    dest.ftr = std::move(src.ftr);
+    dest.prog_name = std::move(src.prog_name);
+    dest.others = std::move(src.others);
+    dest.errors = std::move(src.errors);
+
+    src.options.clear();
+    src.ordered.clear();
+    src.others.clear();
+    src.errors.clear();
+  }
+
+  void copy_parser(const parser &src, parser &dest) {
+    for (std::map<std::string, option_base*>::const_iterator p = src.options.begin();
+      p != src.options.end(); p++) {
+      option_base *new_opt = p->second->clone();
+      dest.options[p->first] = new_opt;
+      dest.ordered.push_back(new_opt);
+    }
+
+    dest.ftr = src.ftr;
+    dest.prog_name = src.prog_name;
+    dest.others = src.others;
+    dest.errors = src.errors;
+  }
 
   void check(int argc, bool ok){
     if ((argc==1 && !ok) || exist("help")){
@@ -718,13 +716,13 @@ private:
     }
 
     void clear() {
-        has = false;
+      has = false;
     }
 
     option_base *clone() const {
-        option_without_value *new_opt = new option_without_value(nam, snam, desc);
-        new_opt->has = has;
-        return new_opt;
+      option_without_value *new_opt = new option_without_value(nam, snam, desc);
+      new_opt->has = has;
+      return new_opt;
     }
 
     bool set(const std::string &){
@@ -785,8 +783,8 @@ private:
     }
 
     void clear() {
-        actual = def;
-        has = false;
+      actual = def;
+      has = false;
     }
 
     bool has_value() const { return true; }
@@ -868,11 +866,11 @@ private:
     }
 
     option_base *clone() const {
-        option_with_value_with_reader *new_opt = new option_with_value_with_reader<T, F>(
-            this->nam, this->snam, this->need, this->def, this->desc, this->reader);
-        new_opt->has = this->has;
-        new_opt->actual = this->actual;
-        return new_opt;
+      option_with_value_with_reader *new_opt = new option_with_value_with_reader<T, F>(
+          this->nam, this->snam, this->need, this->def, this->desc, this->reader);
+      new_opt->has = this->has;
+      new_opt->actual = this->actual;
+      return new_opt;
     }
 
   private:
