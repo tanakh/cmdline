@@ -51,7 +51,7 @@ public:
     std::stringstream ss;
     if (!(ss<<arg && ss>>ret && ss.eof()))
       throw std::bad_cast();
-    
+
     return ret;
   }
 };
@@ -61,7 +61,7 @@ class lexical_cast_t<Target, Source, true>{
 public:
   static Target cast(const Source &arg){
     return arg;
-  }  
+  }
 };
 
 template <typename Source>
@@ -354,6 +354,10 @@ public:
     prog_name=name;
   }
 
+  void set_description(const std::string &description){
+    desc = description;
+  }
+
   bool exist(const std::string &name) const {
     if (options.count(name)==0) throw cmdline_error("there is no flag: --"+name);
     return options.find(name)->second->has_set();
@@ -555,12 +559,14 @@ public:
 
   std::string usage() const {
     std::ostringstream oss;
+    if (!desc.empty())
+        oss<<"description: "<<desc<<std::endl;
     oss<<"usage: "<<prog_name<<" ";
     for (size_t i=0; i<ordered.size(); i++){
       if (ordered[i]->must())
         oss<<ordered[i]->short_description()<<" ";
     }
-    
+
     oss<<"[options] ... "<<ftr<<std::endl;
     oss<<"options:"<<std::endl;
 
@@ -801,6 +807,7 @@ private:
   std::string ftr;
 
   std::string prog_name;
+  std::string desc;
   std::vector<std::string> others;
 
   std::vector<std::string> errors;
