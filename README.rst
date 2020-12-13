@@ -183,7 +183,7 @@ Process flags manually
 parse_check() method parses command line arguments and
 check error and help flag.
 
-You can do this process mannually.
+You can do this process manually.
 bool parse() method parses command line arguments then
 returns if they are valid.
 You should check the result, and do what you want yourself.
